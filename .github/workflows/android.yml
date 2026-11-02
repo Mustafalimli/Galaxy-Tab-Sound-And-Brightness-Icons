@@ -50,7 +50,7 @@ jobs:
       - name: Gradle Kurulumu
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '8.5'
+          gradle-version: '8.9'
 
       - name: APK Derle (Debug)
         run: gradle assembleDebug --stacktrace
