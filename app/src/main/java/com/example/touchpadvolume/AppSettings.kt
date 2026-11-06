@@ -17,6 +17,13 @@ object AppMode {
     const val FLOATING_BUBBLES = 1
 }
 
+/** themeMode değerleri. */
+object ThemeMode {
+    const val SYSTEM = 0
+    const val LIGHT = 1
+    const val DARK = 2
+}
+
 enum class StripPreset { VOLUME_RIGHT_BRIGHTNESS_LEFT, BOTH_RIGHT_STACKED }
 
 data class StripBox(val x: Int, val y: Int, val width: Int, val height: Int)
@@ -29,7 +36,10 @@ data class AppConfig(
     val isCalibrationMode: Boolean,
     val scrollCooldownMs: Long,
     val invertScroll: Boolean,
-    val showSystemVolumeUI: Boolean,
+    val showSystemVolumeUI: Boolean, // kullanılmıyor: sistem ses göstergesi artık her zaman gizli
+    val clickThroughBypass: Boolean,
+    val stripHoverHint: Boolean,
+    val themeMode: Int,
     // Mod 1: görünmez şeritler
     val volStripEnabled: Boolean,
     val briStripEnabled: Boolean,
@@ -169,6 +179,10 @@ class AppSettings private constructor(context: Context) {
                 .coerceIn(MIN_COOLDOWN_MS, MAX_COOLDOWN_MS),
             invertScroll = prefs.getBoolean(KEY_INVERT, false),
             showSystemVolumeUI = prefs.getBoolean(KEY_SHOW_SYSTEM_UI, true),
+            clickThroughBypass = prefs.getBoolean(KEY_CLICK_THROUGH, false),
+            stripHoverHint = prefs.getBoolean(KEY_HOVER_HINT, true),
+            themeMode = prefs.getInt(KEY_THEME, ThemeMode.SYSTEM)
+                .coerceIn(ThemeMode.SYSTEM, ThemeMode.DARK),
             volStripEnabled = prefs.getBoolean(KEY_VOL_STRIP_ENABLED, true),
             briStripEnabled = prefs.getBoolean(KEY_BRI_STRIP_ENABLED, true),
             volStripX = vol.x,
@@ -218,6 +232,25 @@ class AppSettings private constructor(context: Context) {
     fun setInvertScroll(value: Boolean) = commit { putBoolean(KEY_INVERT, value) }
 
     fun setShowSystemVolumeUI(value: Boolean) = commit { putBoolean(KEY_SHOW_SYSTEM_UI, value) }
+
+    fun setClickThroughBypass(value: Boolean) = commit { putBoolean(KEY_CLICK_THROUGH, value) }
+
+    fun setStripHoverHint(value: Boolean) = commit { putBoolean(KEY_HOVER_HINT, value) }
+
+    fun setThemeMode(value: Int) = commit {
+        putInt(KEY_THEME, value.coerceIn(ThemeMode.SYSTEM, ThemeMode.DARK))
+    }
+
+    /** Tüm konum/boyut/davranış ayarlarını varsayılana döndürür; servis durumu ve tema korunur. */
+    fun resetToDefaults() {
+        val running = prefs.getBoolean(KEY_SERVICE_RUNNING, false)
+        val theme = prefs.getInt(KEY_THEME, ThemeMode.SYSTEM)
+        commit {
+            clear()
+            putBoolean(KEY_SERVICE_RUNNING, running)
+            putInt(KEY_THEME, theme)
+        }
+    }
 
     // ---------------------------------------------------------------- yazma (Mod 1: şeritler)
 
@@ -361,6 +394,9 @@ class AppSettings private constructor(context: Context) {
         private const val KEY_COOLDOWN = "scrollCooldownMs"
         private const val KEY_INVERT = "invertScroll"
         private const val KEY_SHOW_SYSTEM_UI = "showSystemVolumeUI"
+        private const val KEY_CLICK_THROUGH = "clickThroughBypass"
+        private const val KEY_HOVER_HINT = "stripHoverHint"
+        private const val KEY_THEME = "themeMode"
 
         private const val KEY_VOL_STRIP_ENABLED = "volStripEnabled"
         private const val KEY_BRI_STRIP_ENABLED = "briStripEnabled"
